@@ -60,6 +60,9 @@ public class Main {
     private CartaCombatente atacanteSelecionado;
     private CartaCombatente alvoSelecionado;
 
+    private List<CartaCombatente> cartasJogador;
+    private List<CartaCombatente> cartasInimigo;
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(Main::new);
     }
@@ -74,7 +77,7 @@ public class Main {
         jogador.setBackground(new Color(80, 0, 120));
         inimigo.setBackground(new Color(90, 0, 0));
 
-        criarTime(
+        cartasJogador = criarTime(
                 jogador,
                 new Color(120, 0, 180),
                 List.of(
@@ -84,7 +87,7 @@ public class Main {
                 ),
                 true
         );
-        criarTime(
+        cartasInimigo = criarTime(
                 inimigo,
                 new Color(140, 20, 20),
                 List.of(
@@ -120,6 +123,14 @@ public class Main {
                     b.receberDano(a.atacar());
                     atacanteSelecionado.atualizar();
                     alvoSelecionado.atualizar();
+
+                    atacar.setEnabled(false);
+                    new javax.swing.Timer(1000 , ev -> { 
+                        executarTurnoInimigo();
+                        atacar.setEnabled(true);
+
+                        ((javax.swing.Timer)ev.getSource()).stop();
+                    }).start();
                 }
             }
         });
@@ -174,5 +185,23 @@ public class Main {
             painel.add(carta);
         }
         return cartas;
+    }
+    private void executarTurnoInimigo() {
+        Random random = new Random();
+
+        List<CartaCombatente> inimigosVivos = cartasInimigo.stream().filter(c -> c.getCombatente().vivo()).toList();
+        List<CartaCombatente> jogadoresVivos = cartasJogador.stream().filter(c -> c.getCombatente().vivo()).toList();
+        if(inimigosVivos.isEmpty() || jogadoresVivos.isEmpty() ) {
+            System.out.println("Fim de jogo");
+            return;
+        }
+        CartaCombatente inimigoAtacante = inimigosVivos.get(random.nextInt(inimigosVivos.size()));
+        CartaCombatente jogadorAlvo = jogadoresVivos.get(random.nextInt(jogadoresVivos.size()));
+
+        Combatente a = inimigoAtacante.getCombatente(); 
+        Combatente b = jogadorAlvo.getCombatente(); 
+
+        b.receberDano(a.atacar());
+        jogadorAlvo.atualizar();
     }
 }
