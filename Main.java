@@ -13,7 +13,7 @@ class CartaCombatente extends JPanel {
         this.c = c;
 
         setLayout(new BorderLayout());
-        setPreferredSize(new Dimension(200, 280)); // Increased card size
+        setPreferredSize(new Dimension(200, 280));
         setBackground(base);
         setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
 
@@ -137,6 +137,8 @@ public class Main {
                             });
                         }).start();
                     });
+                } else {
+                    atacar.setEnabled(true);
                 }
             }
         });
@@ -259,6 +261,7 @@ public class Main {
         return cartas;
     }
 
+    private void executarTurnoInimigo(Runnable onTurnoInimigoEnd) {
         Random random = new Random();
 
         List<CartaCombatente> inimigosVivos = cartasInimigo.stream().filter(c -> c.getCombatente().vivo()).toList();
