@@ -27,7 +27,7 @@ class CartaCombatente extends JPanel {
         String imagePath = "assets/" + c.getClass().getSimpleName() + ".png";
         ImageIcon icon = new ImageIcon(imagePath);
         Image image = icon.getImage();
-        Image scaledImage = image.getScaledInstance(180, 240, java.awt.Image.SCALE_SMOOTH); // Increased image size
+        Image scaledImage = image.getScaledInstance(180, 240, java.awt.Image.SCALE_SMOOTH);
         ImageIcon scaledIcon = new ImageIcon(scaledImage);
         JLabel imageLabel = new JLabel(scaledIcon);
 
@@ -63,12 +63,15 @@ public class Main {
     private List<CartaCombatente> cartasJogador;
     private List<CartaCombatente> cartasInimigo;
 
+    private JFrame f;
+    private JButton atacar;
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(Main::new);
     }
 
     public Main() {
-        JFrame f = new JFrame("Torneio de Cartas");
+        this.f = new JFrame("Torneio de Cartas");
         f.setLayout(new BorderLayout());
 
         JPanel jogador = new JPanel();
@@ -103,7 +106,7 @@ public class Main {
         turnos.setForeground(Color.WHITE);
         turnos.setBorder(BorderFactory.createEmptyBorder(0, 20, 0, 20));
 
-        JButton atacar = new JButton("Atacar");
+        this.atacar = new JButton("Atacar");
         atacar.setBackground(Color.BLACK);
         atacar.setForeground(Color.WHITE);
 
@@ -114,27 +117,29 @@ public class Main {
 
         atacar.addActionListener(e -> {
             if (atacanteSelecionado != null && alvoSelecionado != null) {
-                turno++;
-                turnos.setText("Turnos: " + String.valueOf(turno));
+                if (atacanteSelecionado.getCombatente().vivo() && alvoSelecionado.getCombatente().vivo()) {
+                    atacar.setEnabled(false); 
 
-                Combatente a = atacanteSelecionado.getCombatente();
-                Combatente b = alvoSelecionado.getCombatente();
-                if (a.vivo() && b.vivo()) {
-                    b.receberDano(a.atacar());
-                    atacanteSelecionado.atualizar();
-                    alvoSelecionado.atualizar();
+                    animarAtaque(atacanteSelecionado, alvoSelecionado, () -> {
+                        turno++;
+                        turnos.setText("Turnos: " + String.valueOf(turno));
 
-                    atacar.setEnabled(false);
-                    new javax.swing.Timer(1000 , ev -> { 
-                        executarTurnoInimigo();
-                        atacar.setEnabled(true);
-
-                        ((javax.swing.Timer)ev.getSource()).stop();
-                    }).start();
+                        Combatente a = atacanteSelecionado.getCombatente();
+                        Combatente b = alvoSelecionado.getCombatente();
+                        b.receberDano(a.atacar());
+                        atacanteSelecionado.atualizar();
+                        alvoSelecionado.atualizar();
+                        
+                        new javax.swing.Timer(1000, ev -> {
+                            ((javax.swing.Timer) ev.getSource()).stop();
+                            executarTurnoInimigo(() -> {
+                                atacar.setEnabled(true);
+                            });
+                        }).start();
+                    });
                 }
             }
         });
-
         menu.add(turnos, BorderLayout.WEST);
         menu.add(atacar, BorderLayout.CENTER);
 
@@ -142,9 +147,76 @@ public class Main {
         f.add(inimigo, BorderLayout.NORTH);
         f.add(menu, BorderLayout.CENTER);
 
-        f.setSize(1000, 700); // Increased main frame size
+        f.setSize(1000, 700);
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         f.setVisible(true);
+    }
+    
+    private void animarAtaque(CartaCombatente atacante, CartaCombatente alvo, Runnable onAnimationEnd) {
+        Container parentOriginal = atacante.getParent();
+        int indiceOriginal = -1;
+        for (int i = 0; i < parentOriginal.getComponentCount(); i++) {
+            if (parentOriginal.getComponent(i) == atacante) {
+                indiceOriginal = i;
+                break;
+            }
+        }
+        final int indiceFinal = indiceOriginal;
+
+        Point pontoInicial = SwingUtilities.convertPoint(parentOriginal, atacante.getLocation(), f.getLayeredPane());
+        Point pontoFinal = SwingUtilities.convertPoint(alvo.getParent(), alvo.getLocation(), f.getLayeredPane());
+
+        parentOriginal.remove(atacante);
+        parentOriginal.revalidate();
+        parentOriginal.repaint();
+
+        atacante.setBounds(pontoInicial.x, pontoInicial.y, atacante.getWidth(), atacante.getHeight());
+        f.getLayeredPane().add(atacante, JLayeredPane.DRAG_LAYER);
+
+        int duracao = 200;
+        int quadros = 20;
+        int intervalo = duracao / quadros;
+
+        javax.swing.Timer timerIda = new javax.swing.Timer(intervalo, null);
+        final int[] passoAtual = {0};
+
+        timerIda.addActionListener(e -> {
+            passoAtual[0]++;
+            float progresso = (float) passoAtual[0] / quadros;
+            int x = Math.round(pontoInicial.x + (pontoFinal.x - pontoInicial.x) * progresso);
+            int y = Math.round(pontoInicial.y + (pontoFinal.y - pontoInicial.y) * progresso);
+            atacante.setLocation(x, y);
+
+            if (passoAtual[0] >= quadros) {
+                timerIda.stop();
+
+                javax.swing.Timer timerVolta = new javax.swing.Timer(intervalo, null);
+                final int[] passoVolta = {0};
+
+                timerVolta.addActionListener(ev -> {
+                    passoVolta[0]++;
+                    float progressoVolta = (float) passoVolta[0] / quadros;
+                    int xVolta = Math.round(pontoFinal.x + (pontoInicial.x - pontoFinal.x) * progressoVolta);
+                    int yVolta = Math.round(pontoFinal.y + (pontoInicial.y - pontoFinal.y) * progressoVolta);
+                    atacante.setLocation(xVolta, yVolta);
+
+                    if (passoVolta[0] >= quadros) {
+                        timerVolta.stop();
+                        f.getLayeredPane().remove(atacante);
+                        if (indiceFinal != -1) {
+                            parentOriginal.add(atacante, indiceFinal);
+                        } else {
+                            parentOriginal.add(atacante);
+                        }
+                        parentOriginal.revalidate();
+                        parentOriginal.repaint();
+                        onAnimationEnd.run();
+                    }
+                });
+                timerVolta.start();
+            }
+        });
+        timerIda.start();
     }
 
     private List<CartaCombatente> criarTime(
@@ -186,22 +258,31 @@ public class Main {
         }
         return cartas;
     }
-    private void executarTurnoInimigo() {
+
         Random random = new Random();
 
         List<CartaCombatente> inimigosVivos = cartasInimigo.stream().filter(c -> c.getCombatente().vivo()).toList();
         List<CartaCombatente> jogadoresVivos = cartasJogador.stream().filter(c -> c.getCombatente().vivo()).toList();
-        if(inimigosVivos.isEmpty() || jogadoresVivos.isEmpty() ) {
+        if (inimigosVivos.isEmpty() || jogadoresVivos.isEmpty()) {
             System.out.println("Fim de jogo");
+            if (onTurnoInimigoEnd != null) {
+                onTurnoInimigoEnd.run();
+            }
             return;
         }
         CartaCombatente inimigoAtacante = inimigosVivos.get(random.nextInt(inimigosVivos.size()));
         CartaCombatente jogadorAlvo = jogadoresVivos.get(random.nextInt(jogadoresVivos.size()));
 
-        Combatente a = inimigoAtacante.getCombatente(); 
-        Combatente b = jogadorAlvo.getCombatente(); 
+        animarAtaque(inimigoAtacante, jogadorAlvo, () -> {
+            Combatente a = inimigoAtacante.getCombatente();
+            Combatente b = jogadorAlvo.getCombatente();
+            b.receberDano(a.atacar());
+            jogadorAlvo.atualizar();
+            inimigoAtacante.atualizar();
 
-        b.receberDano(a.atacar());
-        jogadorAlvo.atualizar();
+            if (onTurnoInimigoEnd != null) {
+                onTurnoInimigoEnd.run();
+            }
+        });
     }
 }
