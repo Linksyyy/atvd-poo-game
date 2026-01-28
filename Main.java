@@ -21,6 +21,7 @@ class CartaCombatente extends JPanel {
         nome.setForeground(Color.WHITE);
 
         vida = new JProgressBar(0, c.getPvMax());
+        vida.setForeground(Color.GREEN.darker());
         vida.setValue(c.getPv());
         vida.setStringPainted(true);
 
@@ -42,6 +43,17 @@ class CartaCombatente extends JPanel {
 
     public void atualizar() {
         vida.setValue(c.getPv());
+        double porcentagem = (double) c.getPv()/c.getPvMax();
+
+
+        if(porcentagem <= 0.6 && porcentagem > 0.3) {
+            vida.setForeground(new Color(200, 170, 0));
+        } else if(porcentagem <= 0.3) {
+            vida.setForeground(new Color(150, 0, 0));
+
+        }
+
+
         if (!c.vivo()) {
             setBackground(Color.DARK_GRAY);
         }
