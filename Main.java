@@ -324,6 +324,11 @@ public class Main {
             );
             return;
         }
+        if (jogadoresVivos.isEmpty()) {
+            JOptionPane.showMessageDialog(f, "💀 GAME OVER", "Derrota", JOptionPane.ERROR_MESSAGE);
+            atacar.setEnabled(false);
+            return;
+        }
 
         CartaCombatente inimigoAtacante = inimigosVivos.get(random.nextInt(inimigosVivos.size()));
         CartaCombatente jogadorAlvo = jogadoresVivos.get(random.nextInt(jogadoresVivos.size()));
