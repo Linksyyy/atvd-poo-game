@@ -8,6 +8,11 @@
 * Natalia de Araujo
 
 Este é um projeto Java de Programação Orientada a Objetos (POO) onde criamos e testamos classes para diferentes personagens: Arcanista, Caçador, Combatente e Guardião. Ele já vem com testes unitários para garantir que tudo funcione como deveria.
+## Vídeo de apresentação
+
+<video width="320" height="240" controls>
+  <source src="assets/apresentation.mp4" type="video/mp4">
+</video>
 
 ## Estrutura do Projeto
 
