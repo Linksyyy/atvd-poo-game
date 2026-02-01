@@ -15,7 +15,7 @@ https://github.com/user-attachments/assets/4ee40bb5-e6f4-4639-b9f5-d85a18d1067a
 ## Estrutura do Projeto
 
 - [Arcanista/Cacador/Combatente/Guardiao].java: As classes dos nossos personagens.
-- [Arcanista/Cacador/Guardiao]Test.java: Os testes unitários para cada classe, feitos com JUnit.
+- [Arcanista/Cacador/Combatente/Guardiao]Test.java: Os testes unitários para cada classe, feitos com JUnit.
 - Main.java: Onde a aplicação começa, a lógica principal.
 - assets/: Aqui estão as imagens dos personagens. (As imagens foram geradas utilizando o ChatGPT.)
 - lib/: Nossas bibliotecas externas, como o junit-platform-console-standalone para rodar os testes.
